@@ -50,7 +50,7 @@ namespace DispatcherTests.ViewModels
                     .CombineLatest(_layouts.isInitialized, (rowsStatus, layoutsStatus) => rowsStatus&& layoutsStatus)
                     .StartWith(false)
                     .DistinctUntilChanged()
-                    .ObserveOn(Scheduler.Default)
+                    .ObserveOn(Scheduler.Default) // ---> initialization could take long time so we spin it
                     .Subscribe(
                         i =>
                         {
@@ -82,10 +82,10 @@ namespace DispatcherTests.ViewModels
                                 }
                             })
                         .Sort(SortExpressionComparer<GUIModel>.Ascending(i => i.Layout.Position))
-                        //IntervalWithLayout is UI bound model so we need to make sure it is processed on GUI thread
+                        //GUIModel is UI bound model so we need to make sure it is processed on GUI thread
                         .ObserveOnDispatcher()
                         .Bind(Rows)
-                        //.DisposeMany() //necessary if IntervalWithLayout disposable
+                        //.DisposeMany() //not necessary in this example
                         .Subscribe();
         }
 
