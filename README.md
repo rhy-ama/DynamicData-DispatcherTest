@@ -1,2 +1,3 @@
 # DynamicData-DispatcherTest
-ReactiveUI DynamicData tests
+
+Tests repository
