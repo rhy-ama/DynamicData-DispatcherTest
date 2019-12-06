@@ -51,6 +51,7 @@ namespace DispatcherTests.ViewModels
                     .StartWith(false)
                     .DistinctUntilChanged()
                     .ObserveOn(Scheduler.Default) // ---> initialization could take long time so we spin it
+                    //if replaced with ObserveOnDispatcher(), the code works without exception when binding happens
                     .Subscribe(
                         i =>
                         {
@@ -88,6 +89,41 @@ namespace DispatcherTests.ViewModels
                         //.DisposeMany() //not necessary in this example
                         .Subscribe();
         }
+        
+
+/*
+        //wrapped version that works independenly where it is called from
+        private async void EnableBindings()
+        {
+            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                    () =>
+                    {
+                    //monitor intervals list, merge it with layout and bind
+                    _bindingDisposable = _rows.ObservableObject
+                                .Connect()
+                                .AutoRefreshOnObservable(p => p.WhenAnyPropertyChanged())
+                                .LeftJoin(_layoutDataChangeset, l => l.Id,
+                                    (id, row, layout) =>
+                                    {
+                                        if (layout.HasValue)
+                                        {
+                                            return new GUIModel(row, layout.Value);
+                                        }
+                                        else
+                                        {
+                                                //no stored layout for this row
+                                                return new GUIModel(row, _layouts.InsertNew(row.Id));
+                                        }
+                                    })
+                                .Sort(SortExpressionComparer<GUIModel>.Ascending(i => i.Layout.Position))
+                                //IntervalWithLayout is UI bound model so we need to make sure it is processed on GUI thread
+                                .ObserveOnDispatcher()
+                                .Bind(Rows)
+                                //.DisposeMany() //necessary if IntervalWithLayout disposable
+                                .Subscribe(); 
+                    }).AsTask();
+        }
+ */
 
         protected virtual void Dispose(bool disposing)
         {
